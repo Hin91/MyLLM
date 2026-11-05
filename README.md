@@ -13,10 +13,10 @@ The project is currently under active development.
 - [x] Binary tokenization using uint16
 - [x] PyTorch Dataset and DataLoader
 - [x] Token Embedding layer
-
+- [x] Positional embeddings
+- [x] Input Embedding
 ### In Progress
 
-- [ ] Positional embeddings
 - [ ] Causal self-attention
 - [ ] Feed-forward network
 - [ ] Transformer block

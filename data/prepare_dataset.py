@@ -1,5 +1,3 @@
-# data/prepare_dataset.py
-
 from pathlib import Path
 from collections import Counter, defaultdict
 import hashlib
@@ -30,14 +28,14 @@ CATEGORIES = {
     "dialogues": "unknown",
 }
 
-# Расширения исходного кода
+# Source code extensions
 CODE_EXTENSIONS = {
     ".py", ".cpp", ".cc", ".cxx",
     ".c", ".h", ".hpp", ".hh", ".hxx",
     ".cs", ".java",
 }
 
-# Текстовые документы и документация
+# Text documents and documentation
 DOCUMENTATION_EXTENSIONS = {
     ".md", ".rst", ".txt",
 }
@@ -61,8 +59,7 @@ EXCLUDED_DIRS = {
     "obj",
 }
 
-# Эти файлы сохраняются в исходных репозиториях,
-# но не попадают в обучающий текст.
+# These files are stored in the source repositories, but are not included in the training text.
 EXCLUDED_FILE_NAMES = {
     "license",
     "license.md",
@@ -73,8 +70,7 @@ EXCLUDED_FILE_NAMES = {
     "notice.md",
 }
 
-# Известные лицензии наших источников.
-# Неизвестную лицензию не будем угадывать.
+# Known licenses of the sources.
 SOURCE_LICENSES = {
     "python/TheAlgorithms-Python": "MIT",
     "cpp/TheAlgorithms-C-Plus-Plus": "MIT",
@@ -110,7 +106,7 @@ DOCUMENT_END = "<|document_end|>"
 # ==================================================
 
 def sha256(text: str) -> str:
-    """Вычисляет SHA-256 содержимого документа."""
+    """Calculates the SHA-256 hash of the document's content.."""
     return hashlib.sha256(
         text.encode("utf-8")
     ).hexdigest()
@@ -118,11 +114,11 @@ def sha256(text: str) -> str:
 
 def get_source_id(category: str, file_path: Path) -> str:
     """
-    Определяет источник документа.
+        Identifies the source of the document.
 
-    Например:
-    cpp/Repository/algorithms/sort.cpp
-    -> cpp/Repository
+        For example:
+        cpp/Repository/algorithms/sort.cpp
+        -> cpp/Repository
     """
 
     category_dir = RAW_DIR / category
@@ -137,12 +133,12 @@ def get_source_id(category: str, file_path: Path) -> str:
 
 
 def get_license(source_id: str) -> str:
-    """Возвращает известную лицензию источника."""
+    """Returns the known license of the source."""
     return SOURCE_LICENSES.get(source_id, "UNKNOWN")
 
 
 def should_exclude(file_path: Path, category_dir: Path) -> bool:
-    """Проверяет, нужно ли пропустить файл."""
+    """Checks whether the file should be skipped."""
 
     relative_path = file_path.relative_to(category_dir)
 
@@ -174,19 +170,19 @@ def classify_document(
     file_path: Path
 ) -> tuple[str, str]:
     """
-    Определяет язык и тип документа.
+        Determines the language and type of the document.
 
-    Возвращает:
-    (language, document_type)
+        Returns:
+        (language, document_type)
     """
 
     extension = file_path.suffix.lower()
 
-    # Диалоги в будущем будут обрабатываться отдельно.
+    # In the future, dialogues will be processed separately.
     if category == "dialogues":
         return "unknown", "dialogue"
 
-    # Документация может относиться к конкретному языку.
+    # Documentation may pertain to a specific language.
     language = CATEGORIES[category]
 
     if extension in DOCUMENTATION_EXTENSIONS:
@@ -213,8 +209,8 @@ def collect_documents():
         "duplicates": 0,
     }
 
-    # Дубликаты удаляем только внутри одного источника.
-    # Так мы не потеряем сведения о разных лицензиях.
+    # Removing duplicates only within a single source.
+    # This way, we won’t lose information about different licenses.
     seen_hashes = set()
 
     for category in CATEGORIES:
@@ -313,8 +309,7 @@ def split_documents(documents):
             if not doc["source"].endswith("/root")
         })
 
-        # При наличии нескольких источников
-        # отделяем целые репозитории.
+        # If there are multiple sources, separate out the complete repositories.
         if len(sources) >= 2:
             rng.shuffle(sources)
 
@@ -336,8 +331,7 @@ def split_documents(documents):
             used_methods.add("source_level")
 
         else:
-            # Пока для языка есть только один источник,
-            # используем временное разделение по файлам.
+            # Since there is currently only one source for the language, I use a temporary split into separate files.
             rng.shuffle(language_docs)
 
             validation_count = (
@@ -374,7 +368,7 @@ def split_documents(documents):
 # ==================================================
 
 def format_document(doc: dict) -> str:
-    """Добавляет специальные маркеры к документу."""
+    """Adds special markers to the document."""
 
     language_token = LANGUAGE_TOKENS.get(
         doc["language"],
@@ -396,7 +390,7 @@ def save_text_dataset(
     documents: list,
     output_path: Path
 ):
-    """Сохраняет размеченные документы в один текстовый файл."""
+    """Saves the marked-up documents into a single text file."""
 
     with output_path.open(
         "w",
@@ -412,9 +406,9 @@ def save_metadata(
     output_path: Path
 ):
     """
-    Сохраняет метаданные в JSONL.
+    Saves metadata in JSONL format.
 
-    Одна строка = один документ.
+    One line = one document.
     """
 
     with output_path.open(
@@ -486,7 +480,7 @@ def main():
         documents
     )
 
-    # Текстовые корпуса
+    # Text corpora
     save_text_dataset(
         train,
         OUTPUT_DIR / "train.txt"
