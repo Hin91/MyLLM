@@ -80,10 +80,9 @@ def train_tokenizer():
     print("Training tokenizer...")
     print(f"Dataset: {TRAIN_FILE}")
 
-    # ВАЖНО:
-    # Используем только train.txt.
-    # validation.txt не должен участвовать
-    # в обучении токенизатора.
+    # Important:
+    # Only use train.txt.
+    # validation.txt should not be used
     tokenizer.train(
         files=[str(TRAIN_FILE)],
         trainer=trainer

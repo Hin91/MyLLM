@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 
 
 # --------------------------------------------------
-# Пути к данным
+# Data paths
 # --------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -25,7 +25,7 @@ class TokenDataset(Dataset):
 
         self.block_size = block_size
 
-        # Загружаем бинарный массив токенов.
+        # Loading a binary array of tokens
         self.tokens = np.fromfile(
             file_path,
             dtype=np.uint16,
@@ -36,7 +36,7 @@ class TokenDataset(Dataset):
                 "Dataset is too small for the selected block_size"
             )
 
-        # Количество непересекающихся блоков.
+        # Number of non-overlapping blocks.
         self.num_samples = (len(self.tokens) - 1) // block_size
 
     def __len__(self):
@@ -44,21 +44,21 @@ class TokenDataset(Dataset):
 
     def __getitem__(self, index):
 
-        # Начальная позиция текущего блока.
+        # Starting position of the current block.
         start = index * self.block_size
 
-        # Берём block_size + 1 токенов.
+        # Taking block_size + 1 tokens.
         chunk = self.tokens[
             start : start + self.block_size + 1
         ]
 
-        # Вход: все токены, кроме последнего.
+        # Input: all tokens except the last one.
         x = torch.tensor(
             chunk[:-1].astype(np.int64),
             dtype=torch.long,
         )
 
-        # Ответ: все токены, кроме первого.
+        # Response: all tokens except the first one.
         y = torch.tensor(
             chunk[1:].astype(np.int64),
             dtype=torch.long,
@@ -68,7 +68,7 @@ class TokenDataset(Dataset):
 
 
 # --------------------------------------------------
-# Создание DataLoader
+# DataLoader creation
 # --------------------------------------------------
 
 def create_dataloaders(
@@ -106,7 +106,7 @@ def create_dataloaders(
 
 
 # --------------------------------------------------
-# Тестирование
+# Testing
 # --------------------------------------------------
 
 def main():
@@ -139,8 +139,7 @@ def main():
     print("x:", x[0][:20].tolist())
     print("y:", y[0][:20].tolist())
 
-    # Проверяем, что каждый ответ действительно
-    # соответствует следующему входному токену.
+    # Checking that each response actually corresponds to the next input token.
     assert torch.equal(x[:, 1:], y[:, :-1])
 
     print("\nShift test passed!")

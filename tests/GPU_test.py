@@ -21,11 +21,11 @@ properties = torch.cuda.get_device_properties(0)
 print("VRAM:", round(properties.total_memory / 1024**3, 2), "GB")
 print("BF16 supported:", torch.cuda.is_bf16_supported())
 
-# Создаём матрицы на видеокарте
+# Creating matrices on the graphics card
 a = torch.randn(4096, 4096, device=device)
 b = torch.randn(4096, 4096, device=device)
 
-# Выполняем матричное умножение
+# Performing matrix multiplication
 c = torch.matmul(a, b)
 
 torch.cuda.synchronize()

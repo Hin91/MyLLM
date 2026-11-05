@@ -6,7 +6,7 @@ from tokenizers import Tokenizer
 
 
 # --------------------------------------------------
-# Пути проекта
+# Project paths
 # --------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -26,7 +26,7 @@ METADATA_OUTPUT = OUTPUT_DIR / "metadata.json"
 
 
 # --------------------------------------------------
-# Настройки
+# Parameters
 # --------------------------------------------------
 
 DOCUMENT_END = "<|document_end|>"
@@ -35,7 +35,7 @@ DTYPE = np.uint16
 
 
 # --------------------------------------------------
-# Кодирование одного файла
+# Singular file encoding
 # --------------------------------------------------
 
 def encode_file(
@@ -48,7 +48,7 @@ def encode_file(
     total_tokens = 0
     total_characters = 0
 
-    # Открываем бинарный файл для записи.
+    # Opening binary file
     with input_path.open("r", encoding="utf-8") as source:
         with output_path.open("wb") as output:
 
@@ -64,7 +64,7 @@ def encode_file(
 
                 text = "".join(lines)
 
-                # Преобразуем текст в последовательность ID.
+                # Text to ID sequence conversion.
                 encoding = tokenizer.encode(
                     text,
                     add_special_tokens=False,
@@ -75,16 +75,16 @@ def encode_file(
                 if not ids:
                     return
 
-                # Проверяем, что ID помещаются в uint16.
+                # Checking ID.
                 if max(ids) > np.iinfo(DTYPE).max:
                     raise ValueError(
                         "Token ID does not fit into uint16"
                     )
 
-                # Превращаем Python-список в компактный массив.
+                # Converting Python list to a more efficient format
                 token_array = np.asarray(ids, dtype=DTYPE)
 
-                # Записываем числа непосредственно в бинарный файл.
+                # Writing the numbers directly to a binary file.
                 token_array.tofile(output)
 
                 total_documents += 1
@@ -94,14 +94,12 @@ def encode_file(
             for line in source:
                 document_lines.append(line)
 
-                # Как только встретили конец документа,
-                # кодируем его и очищаем временный буфер.
+                # Once the end of the document is reached, encode it and clear the temporary buffer.
                 if line.strip() == DOCUMENT_END:
                     encode_document(document_lines)
                     document_lines.clear()
 
-            # Обрабатываем остаток, если файл не заканчивается
-            # маркером конца документа.
+            # Process the remainder if the file does not end with an end-of-document marker.
             if document_lines:
                 encode_document(document_lines)
 
@@ -114,7 +112,7 @@ def encode_file(
 
 
 # --------------------------------------------------
-# Главная функция
+# Main function
 # --------------------------------------------------
 
 def main():

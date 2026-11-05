@@ -30,7 +30,7 @@ def train_bpe(corpus, num_merges=10):
     words = Counter()
 
     for word in corpus:
-        # Начинаем с отдельных символов
+        # Starting with individual characters
         encoded = " ".join(list(word)) + " </w>"
         words[encoded] += 1
 
