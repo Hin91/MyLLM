@@ -15,9 +15,9 @@ The project is currently under active development.
 - [x] Token Embedding layer
 - [x] Positional embeddings
 - [x] Input Embedding
+- [x] Causal self-attention
 ### In Progress
 
-- [ ] Causal self-attention
 - [ ] Feed-forward network
 - [ ] Transformer block
 - [ ] Language model architecture
