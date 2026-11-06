@@ -164,7 +164,6 @@ Test file: `tests/test_positional_embeddings.py`
 - Learned positional embeddings are tied to absolute sequence positions.
 - The positional embedding layer does not independently model relationships between tokens.
 
-The next architectural component, Causal Self-Attention, will allow the model to incorporate information from preceding tokens.
 # Input Embedding
 
 ## Overview
@@ -229,3 +228,122 @@ Test file: `tests/test_input_embeddings.py`
 InputEmbedding is the first major component of the Transformer model.
 
 Its output will be passed to the Causal Self-Attention layer, where the model will begin learning relationships between tokens while respecting the autoregressive constraint.
+# Causal Self-Attention
+
+## Overview
+
+Causal Self-Attention allows each token to incorporate information from previous tokens when constructing its contextual representation.
+
+It is based on the Scaled Dot-Product Attention mechanism and is designed for autoregressive language modeling.
+
+Unlike unrestricted self-attention, causal attention prevents tokens from accessing information from future positions.
+
+## Architecture
+
+The component performs the following operations:
+
+1. Projects the input into Query, Key, and Value representations.
+2. Calculates similarity scores between queries and keys.
+3. Scales the scores by the square root of the head dimension.
+4. Applies a causal mask to prevent access to future positions.
+5. Applies Softmax to obtain attention weights.
+6. Computes a weighted sum of Value vectors.
+7. Applies an output linear projection.
+
+## Mathematical Foundation
+
+The attention mechanism is defined as:
+
+**Attention(Q, K, V) = softmax(QKᵀ / √d_k) V**
+
+Where:
+
+- Q — Query representations.
+- K — Key representations.
+- V — Value representations.
+- d_k — Dimension of the Key and Query vectors.
+
+The causal mask replaces scores corresponding to future positions with negative infinity before Softmax.
+
+As a result, future positions receive zero attention weight.
+
+## Tensor Dimensions
+
+## Tensor Dimensions
+
+For the initial single-head configuration:
+
+| Component | Tensor shape | Description |
+|---|---|---|
+| Input | `[16, 512, 256]` | Original token representations |
+| Query | `[16, 512, 256]` | Query vectors produced by a learned linear projection |
+| Key | `[16, 512, 256]` | Key vectors produced by a separate learned linear projection |
+| Value | `[16, 512, 256]` | Value vectors produced by a separate learned linear projection |
+| Transposed Key | `[16, 256, 512]` | Key tensor transposed for matrix multiplication |
+| Attention scores | `[16, 512, 512]` | Pairwise attention scores between sequence positions |
+| Attention weights | `[16, 512, 512]` | Normalized scores after causal masking and Softmax |
+| Attention output | `[16, 512, 256]` | Weighted combinations of Value vectors |
+| Final output | `[16, 512, 256]` | Attention output after the final linear projection |
+
+**Note:** Query, Key, and Value have identical tensor shapes, but contain different values because they are generated using independent trainable linear projections. The attention mechanism transforms the content of the representations while preserving the sequence length and embedding dimension.
+
+## Implementation
+
+Implemented in `model/attention.py` using:
+
+- PyTorch linear projections
+- Scaled Dot-Product Attention
+- Lower-triangular causal masking
+- Softmax normalization
+- Weighted Value aggregation
+- Output linear projection
+
+The current implementation uses a single attention head as an intermediate development stage.
+
+## Design Decisions
+
+- Query, Key, and Value are produced using separate trainable linear projections.
+- Causal masking is applied before Softmax.
+- The causal mask is registered as a non-trainable module buffer.
+- The output dimension remains equal to the input embedding dimension.
+- The maximum supported sequence length is configurable.
+- Attention dropout is not included in this initial implementation.
+
+## Tests
+
+Automated tests verify:
+
+- Output tensor shape.
+- Output data type.
+- Gradient propagation through all projections.
+- Causal behavior: future inputs cannot affect earlier outputs.
+- Rejection of sequences exceeding the configured maximum length.
+- Rejection of invalid input dimensions.
+
+Test file: `tests/test_attention.py`
+
+## Computational Complexity
+
+The attention score matrix has dimensions proportional to the square of the sequence length.
+
+The main attention computation has time complexity proportional to:
+
+**O(B × T² × D)**
+
+Where:
+
+- B — batch size.
+- T — sequence length.
+- D — embedding dimension.
+
+The attention score matrix requires memory proportional to:
+
+**O(B × T²)**
+
+## Architectural Role
+
+Causal Self-Attention is responsible for contextual information exchange between token positions.
+
+Its output will be passed to subsequent Transformer components.
+
+The current single-head implementation establishes the mathematical foundation for the next development stage: Multi-Head Attention.
