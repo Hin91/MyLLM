@@ -521,6 +521,76 @@ Residual connections do not require a separate trainable module.
 
 They will be implemented directly inside `TransformerBlock` using tensor addition.
 
+## Layer Normalization
+
+### Purpose
+
+Layer Normalization stabilizes neural network activations by normalizing feature values independently for each token.
+
+Unlike Batch Normalization, Layer Normalization does not depend on statistics from other samples in the batch.
+
+### Mathematical Definition
+
+First, calculate the mean:
+
+`mean = sum(x) / N`
+
+Then calculate the population variance:
+
+`variance = sum((x - mean)^2) / N`
+
+Normalize the input:
+
+`x_normalized = (x - mean) / sqrt(variance + epsilon)`
+
+Finally, apply learnable scale and shift parameters:
+
+`y = gamma * x_normalized + beta`
+
+### Learnable Parameters
+
+- `gamma`: learnable scale parameter, initialized to ones.
+- `beta`: learnable shift parameter, initialized to zeros.
+- `epsilon`: small constant for numerical stability.
+
+### Configuration
+
+| Parameter | Value |
+|---|---:|
+| Embedding dimension | 256 |
+| Epsilon | 1e-5 |
+| Trainable parameters | 512 |
+
+### Tensor Dimensions
+
+For an input tensor `[16, 512, 256]`, normalization is performed independently over the last dimension.
+
+The output retains the original shape `[16, 512, 256]`.
+
 ### Architecture Decision
 
-The project uses a Pre-LayerNorm Transformer block, where Layer Normalization is applied before each main sublayer.
+The project uses Pre-LayerNorm.
+
+Normalization is applied before Multi-Head Attention and before the Feed-Forward Network:
+
+`x1 = x + Attention(LayerNorm(x))`
+
+`x2 = x1 + FFN(LayerNorm(x1))`
+
+### Implementation
+
+Implemented in `model/layer_norm.py` using PyTorch operations and trainable parameters.
+
+Population variance (`unbiased=False`) is used to match the standard PyTorch LayerNorm convention.
+
+### Tests
+
+The test suite verifies:
+
+- Output shape preservation.
+- Normalized mean and variance.
+- Correct parameter count.
+- Gradient propagation.
+- Invalid input dimensions.
+- Invalid configuration.
+- Single-feature behavior.
