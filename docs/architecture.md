@@ -594,3 +594,128 @@ The test suite verifies:
 - Invalid input dimensions.
 - Invalid configuration.
 - Single-feature behavior.
+# Transformer Model
+
+## Overview
+
+The Transformer Model combines the previously implemented neural network components into a complete Transformer backbone.
+
+It converts input token IDs into contextualized vector representations by passing them through an embedding layer, a stack of Transformer blocks, and a final Layer Normalization layer.
+
+The current architecture follows a decoder-only design and uses causal self-attention to preserve autoregressive behavior.
+
+The Transformer backbone does not directly produce token probabilities. A separate Language Model Head will be responsible for converting its output representations into vocabulary logits.
+
+## Configuration
+
+| Parameter | Value |
+|---|---:|
+| Vocabulary size | 8,000 |
+| Embedding dimension | 256 |
+| Number of Transformer blocks | 6 |
+| Number of attention heads | 4 |
+| Attention head dimension | 64 |
+| Feed-Forward hidden dimension | 1,024 |
+| Maximum sequence length | 512 |
+
+## Architecture
+
+The model consists of three main components:
+
+1. **Input Embedding** — converts token IDs into token and positional representations.
+2. **Transformer Blocks** — processes representations through multiple layers of causal self-attention and feed-forward transformations.
+3. **Final Layer Normalization** — normalizes the output representations after the last Transformer block.
+
+The forward pass follows this structure:
+
+`X = InputEmbedding(token_ids)`
+
+`X = TransformerBlock_1(X)`
+
+`X = TransformerBlock_2(X)`
+
+`...`
+
+`X = TransformerBlock_6(X)`
+
+`Output = FinalLayerNorm(X)`
+
+Each Transformer block has independent trainable parameters.
+
+## Tensor Dimensions
+
+For the initial training configuration:
+
+| Component | Tensor shape |
+|---|---|
+| Input token IDs | `[16, 512]` |
+| Input Embedding output | `[16, 512, 256]` |
+| Each Transformer Block output | `[16, 512, 256]` |
+| Final LayerNorm output | `[16, 512, 256]` |
+
+The sequence length and embedding dimension remain unchanged throughout the Transformer backbone.
+
+## Parameter Count
+
+The initial architecture contains the following trainable parameters:
+
+| Component | Parameters |
+|---|---:|
+| Input Embedding | 2,179,072 |
+| Six Transformer Blocks | 4,738,560 |
+| Final LayerNorm | 512 |
+| **Total** | **6,918,144** |
+
+The parameter count includes all embedding matrices, attention projections, feed-forward layers, and normalization parameters.
+
+It does not include the Language Model Head, which will be implemented separately.
+
+## Implementation
+
+Implemented in `model/transformer_model.py` using:
+
+- `InputEmbedding`
+- `nn.ModuleList`
+- `TransformerBlock`
+- `LayerNorm`
+
+The Transformer blocks are stored in `nn.ModuleList` to ensure that PyTorch registers all their parameters and includes them in device transfers, optimization, and state dictionary operations.
+
+The forward method validates input dimensions, batch size, sequence length, and the configured maximum sequence length.
+
+## Design Decisions
+
+- The architecture uses six independently parameterized Transformer blocks.
+- Pre-LayerNorm is used inside each Transformer block.
+- Causal masking prevents tokens from accessing future positions.
+- All Transformer blocks preserve the embedding dimension.
+- A final Layer Normalization layer is applied after the last block.
+- The maximum sequence length is initially limited to 512 tokens.
+- The Transformer backbone and Language Model Head are implemented as separate components.
+
+## Tests
+
+The test suite verifies:
+
+- Output tensor shape.
+- Output data type.
+- Finite output values.
+- Number of Transformer blocks.
+- Total parameter count.
+- Gradient propagation through embeddings, Transformer blocks, and final normalization.
+- Rejection of invalid input dimensions.
+- Rejection of empty batches and sequences.
+- Rejection of sequences exceeding the maximum length.
+- Invalid configuration handling.
+
+Test file: `tests/test_transformer_model.py`
+
+## Architectural Role
+
+The Transformer Model is the main feature extraction component of the language model.
+
+It transforms each input token into a contextualized representation that incorporates information from preceding tokens.
+
+Its output will be passed to the Language Model Head, which will project each contextualized representation into a vector of vocabulary logits.
+
+These logits will be used during training to calculate the next-token prediction loss and during inference to select the next token.

@@ -17,9 +17,10 @@ The project is currently under active development.
 - [x] Input Embedding
 - [x] Causal self-attention
 - [x] Feed-forward network
+- [x] Transformer block
 ### In Progress
 
-- [ ] Transformer block
+
 - [ ] Language model architecture
 - [ ] Pretraining pipeline
 
