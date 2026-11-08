@@ -424,3 +424,61 @@ Automated tests verify:
 - Maximum sequence length.
 - Input dimension validation.
 - Attention head configuration validation.
+## Feed-Forward Network
+
+### Purpose
+
+The Feed-Forward Network (FFN) is a position-wise neural network used inside each Transformer block.
+
+While Multi-Head Attention allows tokens to exchange information across sequence positions, the FFN independently transforms the representation of each token.
+
+### Architecture
+
+The network consists of two linear layers and a GELU activation function:
+
+`FFN(x) = Linear2(GELU(Linear1(x)))`
+
+The first linear layer expands the embedding dimension, while the second projects it back to its original size.
+
+### Configuration
+
+| Parameter | Value |
+|---|---:|
+| Embedding dimension | 256 |
+| Hidden dimension | 1024 |
+| Expansion factor | 4 |
+| Activation | GELU |
+
+### Tensor Dimensions
+
+For an input tensor with shape `[batch, sequence, embedding]`:
+
+- Input: `[16, 512, 256]`
+- First linear layer: `[16, 512, 1024]`
+- GELU: `[16, 512, 1024]`
+- Second linear layer: `[16, 512, 256]`
+- Output: `[16, 512, 256]`
+
+### Parameter Count
+
+The first linear layer contains 263,168 parameters.
+
+The second linear layer contains 262,400 parameters.
+
+Total: **525,568 trainable parameters**.
+
+### Implementation
+
+Implemented in `model/feed_forward.py` using PyTorch.
+
+The implementation validates input dimensions and embedding size.
+
+### Tests
+
+The test suite verifies:
+
+- Output shape preservation.
+- Correct parameter count.
+- Gradient propagation.
+- Input dimension validation.
+- Invalid configuration handling.
