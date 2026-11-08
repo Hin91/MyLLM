@@ -482,3 +482,45 @@ The test suite verifies:
 - Gradient propagation.
 - Input dimension validation.
 - Invalid configuration handling.
+
+## Residual Connections
+
+### Purpose
+
+Residual connections provide a direct path for information and gradients to flow through the Transformer architecture.
+
+Instead of replacing the input with a transformed representation, the network adds the transformed output to the original input.
+
+### Mathematical Definition
+
+`Output = x + F(x)`
+
+Where:
+- `x` is the original input.
+- `F(x)` is the output of a neural network sublayer.
+
+### Application in the Transformer
+
+Residual connections are used after both Multi-Head Attention and the Feed-Forward Network.
+
+The selected Pre-LayerNorm architecture uses the following equations:
+
+`x1 = x + Attention(LayerNorm(x))`
+
+`x2 = x1 + FFN(LayerNorm(x1))`
+
+### Benefits
+
+- Provides a direct gradient path.
+- Helps preserve existing representations.
+- Makes optimization of deeper neural networks easier.
+
+### Implementation
+
+Residual connections do not require a separate trainable module.
+
+They will be implemented directly inside `TransformerBlock` using tensor addition.
+
+### Architecture Decision
+
+The project uses a Pre-LayerNorm Transformer block, where Layer Normalization is applied before each main sublayer.
