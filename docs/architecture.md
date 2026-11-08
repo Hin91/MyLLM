@@ -346,4 +346,81 @@ Causal Self-Attention is responsible for contextual information exchange between
 
 Its output will be passed to subsequent Transformer components.
 
-The current single-head implementation establishes the mathematical foundation for the next development stage: Multi-Head Attention.
+# Multi-Head Attention
+
+## Overview
+
+Multi-Head Attention extends single-head causal self-attention
+by processing multiple attention heads in parallel.
+
+Each head operates on a separate portion of the embedding
+dimension. Their outputs are concatenated and transformed
+using a final linear projection.
+
+## Configuration
+
+| Parameter | Value |
+|---|---:|
+| Embedding dimension | 256 |
+| Number of heads | 4 |
+| Head dimension | 64 |
+| Maximum sequence length | 512 |
+
+The head dimension is calculated as:
+
+head_dim = embedding_dim / num_heads = 256 / 4 = 64
+
+## Tensor Dimensions
+
+For batch size 16 and sequence length 512:
+
+| Component | Tensor shape |
+|---|---|
+| Input | [16, 512, 256] |
+| Query | [16, 4, 512, 64] |
+| Key | [16, 4, 512, 64] |
+| Value | [16, 4, 512, 64] |
+| Attention scores | [16, 4, 512, 512] |
+| Attention weights | [16, 4, 512, 512] |
+| Attention output | [16, 4, 512, 64] |
+| Concatenated output | [16, 512, 256] |
+| Final output | [16, 512, 256] |
+
+## Implementation
+
+Implemented in `model/multi_head_attention.py` using:
+
+- Independent Query, Key, and Value projections.
+- Multiple parallel attention heads.
+- Scaled dot-product attention.
+- Causal masking.
+- Softmax normalization.
+- Attention head concatenation.
+- Final output projection.
+
+## Parameter Count
+
+The implementation contains four linear projections.
+
+Each projection has:
+
+256 × 256 + 256 = 65,792 parameters.
+
+Total:
+
+4 × 65,792 = 263,168 parameters.
+
+## Tests
+
+Test file: `tests/test_multi_head_attention.py`
+
+Automated tests verify:
+
+- Output shape and data type.
+- Attention head configuration.
+- Parameter count.
+- Gradient propagation.
+- Causal behavior.
+- Maximum sequence length.
+- Input dimension validation.
+- Attention head configuration validation.
