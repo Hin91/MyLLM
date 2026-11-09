@@ -719,3 +719,208 @@ It transforms each input token into a contextualized representation that incorpo
 Its output will be passed to the Language Model Head, which will project each contextualized representation into a vector of vocabulary logits.
 
 These logits will be used during training to calculate the next-token prediction loss and during inference to select the next token.
+# Language Model Head
+
+## Overview
+
+The Language Model Head is responsible for converting contextualized token representations produced by the Transformer backbone into vocabulary logits.
+
+Each sequence position receives a separate vector of scores corresponding to all tokens in the tokenizer vocabulary.
+
+These scores are used to predict the next token during autoregressive language modeling.
+
+## Mathematical Representation
+
+The Language Model Head applies a linear transformation:
+
+`Logits = XW^T + b`
+
+Where:
+
+- **X** — contextualized Transformer representations.
+- **W** — trainable projection weight matrix.
+- **b** — trainable bias vector.
+- **Logits** — unnormalized scores for vocabulary tokens.
+
+For the current configuration:
+
+- Input dimension: 256
+- Vocabulary size: 8,000
+- Weight matrix: `[8000, 256]`
+- Bias vector: `[8000]`
+
+## Configuration
+
+| Parameter | Value |
+|---|---:|
+| Embedding dimension | 256 |
+| Vocabulary size | 8,000 |
+| Projection type | Linear |
+| Trainable parameters | 2,056,000 |
+| Activation function | None |
+| Softmax | Not applied |
+
+## Tensor Dimensions
+
+For batch size 16 and sequence length 512:
+
+| Component | Tensor shape |
+|---|---|
+| Transformer output | `[16, 512, 256]` |
+| Projection weight | `[8000, 256]` |
+| Projection bias | `[8000]` |
+| Language Model Head output | `[16, 512, 8000]` |
+
+The linear projection operates on the last dimension of the input tensor while preserving batch size and sequence length.
+
+## Implementation
+
+Implemented in `model/language_model_head.py` using:
+
+- `torch.nn.Linear`
+
+The implementation validates input dimensions, embedding dimension, and configuration parameters.
+
+## Design Decisions
+
+- A separate linear projection is used to map Transformer representations to vocabulary logits.
+- The projection has independent trainable weights and bias.
+- Softmax is not applied inside the module.
+- Raw logits are returned for compatibility with `torch.nn.CrossEntropyLoss`.
+- Weight tying between token embeddings and the output projection is not implemented in the initial version.
+
+## Tests
+
+The test suite verifies:
+
+- Output tensor shape.
+- Output data type.
+- Finite output values.
+- Correct parameter count.
+- Gradient propagation to input representations and projection parameters.
+- Rejection of invalid input dimensions.
+- Rejection of incorrect embedding dimensions.
+- Rejection of empty sequences.
+- Invalid configuration handling.
+
+Test file: `tests/test_language_model_head.py`
+
+## Architectural Role
+
+The Language Model Head is the final projection component of the language model.
+
+It converts contextualized representations into vocabulary logits, allowing the model to estimate the next-token distribution.
+
+During training, these logits will be compared against the expected next-token IDs using a cross-entropy loss
+# Language Model
+
+## Overview
+
+The Language Model is the complete decoder-only causal language model. It combines the Transformer Model backbone with a Language Model Head to predict the next token in a sequence.
+
+It receives token IDs and produces vocabulary logits for every position in the input sequence.
+
+## Architecture
+
+The model consists of two main components:
+
+1. **Transformer Model** — converts input token IDs into contextualized hidden representations.
+2. **Language Model Head** — projects hidden representations into vocabulary-sized logits.
+
+The data flow is:
+
+```text
+Input Token IDs
+      |
+      v
+Transformer Model
+      |
+      v
+Contextualized Representations
+      |
+      v
+Language Model Head
+      |
+      v
+Vocabulary Logits
+```
+
+## Tensor Dimensions
+
+Let:
+
+- B — batch size
+- T — sequence length
+- E — embedding dimension
+- V — vocabulary size
+
+Input:
+
+`[B, T]`
+
+Transformer output:
+
+`[B, T, E]`
+
+Language Model output:
+
+`[B, T, V]`
+
+Each position produces a vector of V logits representing the model's predictions for the next token.
+
+## Configuration
+
+The model uses the following parameters:
+
+- `vocab_size` — tokenizer vocabulary size
+- `embedding_dim` — hidden representation dimension
+- `num_layers` — number of Transformer blocks
+- `num_heads` — number of attention heads
+- `hidden_dim` — Feed-Forward Network hidden dimension
+- `max_seq_len` — maximum supported sequence length
+
+## Forward Pass
+
+1. Input token IDs are passed to the Transformer Model.
+2. Token and positional embeddings are combined.
+3. The sequence passes through all Transformer blocks.
+4. Final Layer Normalization is applied.
+5. The Language Model Head projects each hidden representation into vocabulary logits.
+6. The resulting logits are returned without applying Softmax.
+
+Softmax is not applied inside the model because training uses `CrossEntropyLoss`, which performs the required normalization internally.
+
+## Parameter Count
+
+For the configuration:
+
+- Vocabulary size: 8,000
+- Embedding dimension: 256
+- Transformer layers: 6
+- Attention heads: 4
+- Feed-Forward hidden dimension: 1,024
+- Maximum sequence length: 512
+
+Parameter distribution:
+
+| Component | Parameters |
+|---|---:|
+| Transformer Model | 6,918,144 |
+| Language Model Head | 2,056,000 |
+| **Total** | **8,974,144** |
+
+The input token embeddings and output projection use separate parameters. Weight tying is not implemented.
+
+## Design Decisions
+
+- The model uses a decoder-only Transformer architecture.
+- Causal self-attention prevents positions from accessing future tokens.
+- Pre-Layer Normalization is used inside Transformer blocks.
+- The output layer returns raw logits rather than probabilities.
+- The architecture supports next-token prediction training.
+
+## Architectural Role
+
+The Language Model combines all previously implemented neural network components into a complete model capable of autoregressive language modeling.
+
+It provides the model interface required by the training and inference pipelines.

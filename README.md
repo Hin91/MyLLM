@@ -18,10 +18,9 @@ The project is currently under active development.
 - [x] Causal self-attention
 - [x] Feed-forward network
 - [x] Transformer block
+- [x] Language model architecture
 ### In Progress
 
-
-- [ ] Language model architecture
 - [ ] Pretraining pipeline
 
 ## Technology Stack
