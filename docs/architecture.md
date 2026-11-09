@@ -924,3 +924,59 @@ The input token embeddings and output projection use separate parameters. Weight
 The Language Model combines all previously implemented neural network components into a complete model capable of autoregressive language modeling.
 
 It provides the model interface required by the training and inference pipelines.
+## Language Model Loss
+
+The `LanguageModelLoss` module calculates the training loss for next-token prediction.
+
+### Purpose
+
+During training, the Language Model predicts the next token for every position in an input sequence.
+
+The loss function compares the predicted vocabulary logits with the corresponding target token IDs and measures the prediction error.
+
+### Input and Output
+
+The loss function accepts two tensors:
+
+- `logits`: Model predictions with shape `[batch_size, seq_len, vocab_size]`.
+- `targets`: Expected token IDs with shape `[batch_size, seq_len]`.
+
+It returns a scalar loss value.
+
+### Loss Calculation
+
+The implementation uses PyTorch's `nn.CrossEntropyLoss`.
+
+Cross-entropy measures how well the predicted probability distribution matches the correct target token.
+
+`CrossEntropyLoss` internally applies the required log-softmax operation, so the model must provide raw logits without applying Softmax beforehand.
+
+Before calculating the loss, the tensors are reshaped:
+
+- `logits`: `[batch_size, seq_len, vocab_size]` -> `[batch_size * seq_len, vocab_size]`
+- `targets`: `[batch_size, seq_len]` -> `[batch_size * seq_len]`
+
+This allows the loss function to evaluate every token prediction across the entire batch.
+
+By default, `nn.CrossEntropyLoss` uses mean reduction, returning the average loss across all token positions.
+
+### Validation
+
+The module validates:
+
+- `logits` must have three dimensions.
+- `targets` must have two dimensions.
+- Batch size and sequence length must match between the two tensors.
+
+Invalid input shapes raise a `ValueError`.
+
+### Testing
+
+Unit tests cover:
+
+- Scalar output shape.
+- Non-negative loss values.
+- Gradient propagation through logits.
+- Processing different batch sizes, sequence lengths, and vocabulary sizes.
+- Invalid logits and targets dimensions.
+- Mismatched batch and sequence dimensions.

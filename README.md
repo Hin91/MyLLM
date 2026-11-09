@@ -31,10 +31,12 @@ The project is currently under active development.
 - [x] Language Model Head
 - [x] Complete Language Model architecture
 
+**Training Components**
+- [x] Language Model Loss (Cross Entropy)
+
 ### In Progress
 
-- [ ] Training pipeline
-- [ ] Loss calculation and optimization
+- [ ] Optimizer implementation
 - [ ] Training and validation loop
 - [ ] Model checkpointing
 - [ ] Training metrics and evaluation
@@ -43,7 +45,6 @@ The project is currently under active development.
 
 - [ ] Pretraining on the prepared multi-language dataset
 - [ ] Model inference and text generation
-- [ ] Evaluation of code generation quality
 - [ ] Instruction fine-tuning
 - [ ] Improved dataset processing and validation
 
