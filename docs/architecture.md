@@ -980,3 +980,28 @@ Unit tests cover:
 - Processing different batch sizes, sequence lengths, and vocabulary sizes.
 - Invalid logits and targets dimensions.
 - Mismatched batch and sequence dimensions.
+
+### AdamW Optimizer
+
+The `ModelOptimizer` class wraps PyTorch's built-in AdamW optimizer and manages the optimization of model parameters.
+
+**Optimizer:** AdamW (`torch.optim.AdamW`)
+
+**Default hyperparameters:**
+- Learning rate: `3e-4`
+- Betas: `(0.9, 0.999)`
+- Epsilon: `1e-8`
+- Weight decay: `0.01`
+
+The optimizer receives all trainable parameters from the language model through `model.parameters()`.
+
+AdamW maintains exponential moving averages of gradients and squared gradients to adapt parameter updates. It applies weight decay separately from the gradient-based update.
+
+The class validates the model instance and optimizer hyperparameters before initialization.
+
+During training:
+1. `zero_grad()` clears gradients from the previous iteration.
+2. `backward()` computes gradients using automatic differentiation.
+3. `step()` updates model parameters.
+
+The current implementation uses a single parameter group. Separate weight decay settings for biases and normalization parameters may be introduced later.

@@ -31,12 +31,12 @@ The project is currently under active development.
 - [x] Language Model Head
 - [x] Complete Language Model architecture
 
-**Training Components**
+### Training Components
 - [x] Language Model Loss (Cross Entropy)
+- [x] AdamW Optimizer
 
 ### In Progress
 
-- [ ] Optimizer implementation
 - [ ] Training and validation loop
 - [ ] Model checkpointing
 - [ ] Training metrics and evaluation
