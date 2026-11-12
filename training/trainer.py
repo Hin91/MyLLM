@@ -21,6 +21,9 @@ class Trainer:
         self.model.to(self.device)
 
     def train_epoch(self, train_loader) -> float:
+        if len(train_loader) == 0:
+            raise ValueError("Training DataLoader is empty.")
+
         self.model.train()
 
         total_loss = 0.0
