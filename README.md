@@ -34,10 +34,9 @@ The project is currently under active development.
 ### Training Components
 - [x] Language Model Loss (Cross Entropy)
 - [x] AdamW Optimizer
+- [x] Training and validation loop
 
 ### In Progress
-
-- [ ] Training and validation loop
 - [ ] Model checkpointing
 - [ ] Training metrics and evaluation
 

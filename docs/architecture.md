@@ -1005,3 +1005,18 @@ During training:
 3. `step()` updates model parameters.
 
 The current implementation uses a single parameter group. Separate weight decay settings for biases and normalization parameters may be introduced later.
+### Trainer
+
+The `Trainer` class coordinates the model, loss function, optimizer, and data loaders during training and validation.
+
+**Implemented methods:**
+
+- `train_epoch()` — performs one complete training epoch, including forward pass, loss calculation, backpropagation, and optimizer updates.
+- `validate()` — evaluates the model without calculating gradients or updating parameters.
+- `train()` — runs multiple training epochs, performs validation after each epoch, and records loss history.
+
+The Trainer supports CPU and CUDA devices. Model inputs and targets are moved to the configured device before computation.
+
+Training and validation losses are stored separately in a history dictionary.
+
+Validation uses `torch.no_grad()` to reduce memory consumption and avoid building computation graphs.
